@@ -1,3 +1,6 @@
+"""
+Fetch and render Habitica profile data on Tidbyt.
+"""
 load("render.star", "render")
 load("http.star", "http")
 load("cache.star", "cache")
@@ -8,6 +11,7 @@ load("encoding/json.star", "json")
 author = "24f2bb71-90b3-4cbc-8c49-231a214f7a60"
 app_name = "tidbyt-habitica"
 habitica_profile_url = "https://habitica.com/api/v3/members/%s" % author
+profile_cache_ttl_seconds = 1800
 
 # Bar deets
 bar_height = 3
@@ -38,6 +42,35 @@ def get_habitica_profile(url):
     return rep.json()["data"]
 
 
+def filter_profile_fields(profile_data):
+    """
+    Filter fields from the profile returned from Habitica API.
+
+    Args:
+        profile_data: Dict format of profile data response from Habitica API.
+        Note that this is specifically the "data" field of the overall
+        profile response from the API.
+    
+    Returns:
+        Dict containing only fields that we're interested in which
+        reduces how much space is needed in cache.
+    """
+    stats = profile_data["stats"]
+    return {
+        "name": profile_data["profile"]["name"],
+        "stats": stats,
+        "current_exp": stats["exp"],
+        "exp_for_next_lvl": stats["toNextLevel"],
+        "exp_percentage": (stats["exp"]/stats["toNextLevel"]),
+        "current_hp": stats["hp"],
+        "max_hp": stats["maxHealth"],
+        "hp_percentage": (stats["hp"]/stats["maxHealth"]),
+        "current_mp": stats["mp"],
+        "max_mp": stats["maxMP"],
+        "mp_percentage": (stats["mp"]/stats["maxMP"]),
+    }
+
+
 def main():
     """
     Pull, cache, and format Habitica Profile for Tidbyt.
@@ -53,33 +86,17 @@ def main():
     else:
         print("Cache miss. Fetching new profile data.")
         # Fetch the profile.
-        user_profile = get_habitica_profile(habitica_profile_url)
-        cache.set("user_profile", json.encode(user_profile), ttl_seconds=30)
+        user_profile = filter_profile_fields(get_habitica_profile(habitica_profile_url))
+        cache.set("user_profile", json.encode(user_profile), ttl_seconds=profile_cache_ttl_seconds)
 
-    # Separate the fields we want.
-    name = user_profile["profile"]["name"]
-    stats = user_profile["stats"]
-
-    # Stat values
-    current_exp = stats["exp"]
-    exp_for_next_lvl = stats["toNextLevel"]
-    exp_percentage = (current_exp/exp_for_next_lvl)
-
-    current_hp = stats["hp"]
-    max_hp = stats["maxHealth"]
-    hp_percentage = (current_hp/max_hp)
-
-    current_mp = stats["mp"]
-    max_mp = stats["maxMP"]
-    mp_percentage = (current_mp/max_mp)
 
     # Render the result.
     return render.Root(
         child = render.Column(
-            children=[render.Text(name),
-            render.Box(width=int(bar_max_length*hp_percentage), height=bar_height, color=color_red),
-            render.Box(width=int(bar_max_length*exp_percentage), height=bar_height, color=color_yellow),
-            render.Box(width=int(bar_max_length*mp_percentage), height=bar_height, color=color_blue)
+            children=[render.Text(user_profile["name"]),
+            render.Box(width=int(bar_max_length*user_profile["hp_percentage"]), height=bar_height, color=color_red),
+            render.Box(width=int(bar_max_length*user_profile["exp_percentage"]), height=bar_height, color=color_yellow),
+            render.Box(width=int(bar_max_length*user_profile["mp_percentage"]), height=bar_height, color=color_blue)
             ]
         )          
     )
