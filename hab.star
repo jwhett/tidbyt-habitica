@@ -15,13 +15,14 @@ profile_cache_ttl_seconds = 1800
 
 # Bar deets
 outside_bar_height = 5
-inside_bar_height = 3
+inside_bar_height = outside_bar_height-2
 outside_bar_max_length = 64
-inside_bar_max_length = 62
-inside_bar_padding = (1,1,0,0)
+inside_bar_max_length = outside_bar_max_length-2
+inside_bar_padding = (1,1,0,0) # (left, top, right, bottom)
 
 # Colors
-color_white = "#ffffffee"
+color_white = "#ffffffff"
+color_faded_white = "#ffffffee"
 color_red = "#ff0000ff"
 color_faded_red = "#ff000055"
 color_yellow = "#ffff00ff"
@@ -29,6 +30,11 @@ color_faded_yellow = "#ffff0055"
 color_blue = "#0000ffff"
 color_faded_blue = "#0000ff55"
 color_pale_green = "#00ff99ff"
+
+# Default colors
+default_border_color = color_white
+default_inner_fg_color = color_white
+default_inner_bg_color = color_faded_white
 
 
 def get_habitica_profile(url):
@@ -79,6 +85,37 @@ def filter_profile_fields(profile_data):
     }
 
 
+def stat_bar(val, inner_fg_color=default_inner_fg_color, inner_bg_color=default_inner_bg_color, border_color=default_border_color):
+    """
+    Build a stacked stat bar Widget.
+
+    Args:
+        val: Value expected to be the float percentage of the bar
+        to be filled.
+        inner_fg_color: Foreground color of the inner bar. Width
+        of bar is determined by val.
+        inner_bg_color: Background color of the inner bar. This
+        is shown in the negative space of the inner bar representing
+        the "missing" portion.
+        border_color: Color of the border. Technically rendered
+        behind both inner bars.
+    
+    Returns:
+        Stacked Widget of three Boxes. Inner bars are padded to fit
+        within the border.
+    """
+    return render.Stack(children=[
+                    render.Box(width=outside_bar_max_length, height=outside_bar_height, color=border_color),
+                    render.Padding(
+                        render.Box(width=inside_bar_max_length, height=inside_bar_height, color=inner_bg_color),
+                        pad=inside_bar_padding,
+                    ),
+                    render.Padding(
+                        render.Box(width=int(val*inside_bar_max_length), height=inside_bar_height, color=inner_fg_color),
+                        pad=inside_bar_padding,
+                    ),
+                ])
+
 def main():
     """
     Pull, cache, and format Habitica Profile for Tidbyt.
@@ -103,39 +140,9 @@ def main():
         child = render.Column(
             children=[
                 render.Text(user_profile["name"], font="6x13", color=color_pale_green),
-                render.Stack(children=[
-                    render.Box(width=outside_bar_max_length, height=outside_bar_height, color=color_white),
-                    render.Padding(
-                        render.Box(width=inside_bar_max_length, height=inside_bar_height, color=color_faded_red),
-                        pad=inside_bar_padding,
-                    ),
-                    render.Padding(
-                        render.Box(width=int(inside_bar_max_length*user_profile["hp_percentage"]), height=inside_bar_height, color=color_red),
-                        pad=inside_bar_padding,
-                    ),
-                ]),
-                render.Stack(children=[
-                    render.Box(width=outside_bar_max_length, height=outside_bar_height, color=color_white),
-                    render.Padding(
-                        render.Box(width=inside_bar_max_length, height=inside_bar_height, color=color_faded_yellow),
-                        pad=inside_bar_padding,
-                    ),
-                    render.Padding(
-                        render.Box(width=int(inside_bar_max_length*user_profile["exp_percentage"]), height=inside_bar_height, color=color_yellow),
-                        pad=inside_bar_padding,
-                    ),
-                ]),
-                render.Stack(children=[
-                    render.Box(width=outside_bar_max_length, height=outside_bar_height, color=color_white),
-                    render.Padding(
-                        render.Box(width=inside_bar_max_length, height=inside_bar_height, color=color_faded_blue),
-                        pad=inside_bar_padding,
-                    ),
-                    render.Padding(
-                        render.Box(width=int(inside_bar_max_length*user_profile["mp_percentage"]), height=inside_bar_height, color=color_blue),
-                        pad=inside_bar_padding,
-                    ),
-                ]),
+                stat_bar(user_profile["hp_percentage"], inner_fg_color=color_red, inner_bg_color=color_faded_red),
+                stat_bar(user_profile["exp_percentage"], inner_fg_color=color_yellow, inner_bg_color=color_faded_yellow),
+                stat_bar(user_profile["mp_percentage"], inner_fg_color=color_blue, inner_bg_color=color_faded_blue),
             ]
         )
     )
