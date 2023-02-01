@@ -18,9 +18,9 @@ bar_height = 3
 bar_max_length = 64
 
 # Colors
-color_red = "#b30b0b"
-color_yellow = "#e7f20c"
-color_blue = "#0b0ed9"
+color_red = "#ff0000ff"
+color_yellow = "#ffff00ff"
+color_blue = "#0000ffff"
 
 
 def get_habitica_profile(url):
