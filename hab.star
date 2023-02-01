@@ -5,6 +5,8 @@ load("render.star", "render")
 load("http.star", "http")
 load("cache.star", "cache")
 load("encoding/json.star", "json")
+load("time.star", "time")
+load("humanize.star", "humanize")
 
 
 # API deets
@@ -125,21 +127,25 @@ def main():
     """
     # Profile cache.
     cached_profile = cache.get("user_profile")
+    cached_fetch_datetime = cache.get("fetch_datetime")
     if cached_profile != None:
         print("Cache hit! Using cached data.")
         user_profile = json.decode(cached_profile)
+        fetch_datetime = cached_fetch_datetime
     else:
         print("Cache miss. Fetching new profile data.")
         # Fetch the profile.
         user_profile = filter_profile_fields(get_habitica_profile(habitica_profile_url))
+        fetch_datetime = humanize.time_format("HH:mm", time.now())
         cache.set("user_profile", json.encode(user_profile), ttl_seconds=profile_cache_ttl_seconds)
+        cache.set("fetch_datetime", fetch_datetime, ttl_seconds=profile_cache_ttl_seconds)
 
 
     # Render the result.
     return render.Root(
         child = render.Column(
             children=[
-                render.Text(user_profile["name"], font="6x13", color=color_pale_green),
+                render.Text("%s @ %s" % (user_profile["name"], fetch_datetime), color=color_pale_green),
                 stat_bar(user_profile["hp_percentage"], inner_fg_color=color_red, inner_bg_color=color_faded_red),
                 stat_bar(user_profile["exp_percentage"], inner_fg_color=color_yellow, inner_bg_color=color_faded_yellow),
                 stat_bar(user_profile["mp_percentage"], inner_fg_color=color_blue, inner_bg_color=color_faded_blue),
