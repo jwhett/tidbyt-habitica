@@ -14,13 +14,20 @@ habitica_profile_url = "https://habitica.com/api/v3/members/%s" % author
 profile_cache_ttl_seconds = 1800
 
 # Bar deets
-bar_height = 3
-bar_max_length = 64
+outside_bar_height = 5
+inside_bar_height = 3
+outside_bar_max_length = 64
+inside_bar_max_length = 62
+inside_bar_padding = (1,1,0,0)
 
 # Colors
 color_red = "#ff0000ff"
+color_faded_red = "#ff000055"
 color_yellow = "#ffff00ff"
+color_faded_yellow = "#ffff0055"
 color_blue = "#0000ffff"
+color_faded_blue = "#0000ff55"
+color_pale_green = "#00ff99ff"
 
 
 def get_habitica_profile(url):
@@ -93,10 +100,29 @@ def main():
     # Render the result.
     return render.Root(
         child = render.Column(
-            children=[render.Text(user_profile["name"]),
-            render.Box(width=int(bar_max_length*user_profile["hp_percentage"]), height=bar_height, color=color_red),
-            render.Box(width=int(bar_max_length*user_profile["exp_percentage"]), height=bar_height, color=color_yellow),
-            render.Box(width=int(bar_max_length*user_profile["mp_percentage"]), height=bar_height, color=color_blue)
+            children=[
+                render.Text(user_profile["name"], font="6x13", color=color_pale_green),
+                render.Stack(children=[
+                    render.Padding(
+                        render.Box(width=int(inside_bar_max_length*user_profile["hp_percentage"]), height=inside_bar_height, color=color_red),
+                        pad=inside_bar_padding,
+                    ),
+                    render.Box(width=outside_bar_max_length, height=outside_bar_height, color=color_faded_red),
+                ]),
+                render.Stack(children=[
+                    render.Padding(
+                        render.Box(width=int(inside_bar_max_length*user_profile["exp_percentage"]), height=inside_bar_height, color=color_yellow),
+                        pad=inside_bar_padding,
+                    ),
+                    render.Box(width=outside_bar_max_length, height=outside_bar_height, color=color_faded_yellow),
+                ]),
+                render.Stack(children=[
+                    render.Padding(
+                        render.Box(width=int(inside_bar_max_length*user_profile["mp_percentage"]), height=inside_bar_height, color=color_blue),
+                        pad=inside_bar_padding,
+                    ),
+                    render.Box(width=outside_bar_max_length, height=outside_bar_height, color=color_faded_blue),
+                ]),
             ]
-        )          
+        )
     )
