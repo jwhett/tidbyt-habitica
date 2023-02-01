@@ -21,6 +21,7 @@ inside_bar_max_length = 62
 inside_bar_padding = (1,1,0,0)
 
 # Colors
+color_white = "#ffffffee"
 color_red = "#ff0000ff"
 color_faded_red = "#ff000055"
 color_yellow = "#ffff00ff"
@@ -103,25 +104,37 @@ def main():
             children=[
                 render.Text(user_profile["name"], font="6x13", color=color_pale_green),
                 render.Stack(children=[
+                    render.Box(width=outside_bar_max_length, height=outside_bar_height, color=color_white),
+                    render.Padding(
+                        render.Box(width=inside_bar_max_length, height=inside_bar_height, color=color_faded_red),
+                        pad=inside_bar_padding,
+                    ),
                     render.Padding(
                         render.Box(width=int(inside_bar_max_length*user_profile["hp_percentage"]), height=inside_bar_height, color=color_red),
                         pad=inside_bar_padding,
                     ),
-                    render.Box(width=outside_bar_max_length, height=outside_bar_height, color=color_faded_red),
                 ]),
                 render.Stack(children=[
+                    render.Box(width=outside_bar_max_length, height=outside_bar_height, color=color_white),
+                    render.Padding(
+                        render.Box(width=inside_bar_max_length, height=inside_bar_height, color=color_faded_yellow),
+                        pad=inside_bar_padding,
+                    ),
                     render.Padding(
                         render.Box(width=int(inside_bar_max_length*user_profile["exp_percentage"]), height=inside_bar_height, color=color_yellow),
                         pad=inside_bar_padding,
                     ),
-                    render.Box(width=outside_bar_max_length, height=outside_bar_height, color=color_faded_yellow),
                 ]),
                 render.Stack(children=[
+                    render.Box(width=outside_bar_max_length, height=outside_bar_height, color=color_white),
+                    render.Padding(
+                        render.Box(width=inside_bar_max_length, height=inside_bar_height, color=color_faded_blue),
+                        pad=inside_bar_padding,
+                    ),
                     render.Padding(
                         render.Box(width=int(inside_bar_max_length*user_profile["mp_percentage"]), height=inside_bar_height, color=color_blue),
                         pad=inside_bar_padding,
                     ),
-                    render.Box(width=outside_bar_max_length, height=outside_bar_height, color=color_faded_blue),
                 ]),
             ]
         )
